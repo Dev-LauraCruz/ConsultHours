@@ -20,6 +20,21 @@ export type LoginResponse = {
   user: { id: number; username: string; role: string; name: string };
 };
 
+export type SummaryResponse = {
+  client_id: number;
+  month: string;
+  billableHours: number;
+  entryCount: number;
+};
+
+function getHeaders() {
+  const token = localStorage.getItem("token");
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
 export async function login(username: string, password: string): Promise<LoginResponse> {
   const res = await fetch(`${API_URL}/login`, {
     method: "POST",
@@ -27,36 +42,52 @@ export async function login(username: string, password: string): Promise<LoginRe
     body: JSON.stringify({ username, password }),
   });
   if (!res.ok) throw new Error("Credenciales inválidas");
-  return res.json();
+  const data = await res.json();
+  localStorage.setItem("token", data.token);
+  return data;
 }
 
 export async function getClients(): Promise<Client[]> {
-  const res = await fetch(`${API_URL}/clients`);
+  const res = await fetch(`${API_URL}/clients`, { headers: getHeaders() });
   return res.json();
 }
 
 export async function getTimeEntries(): Promise<TimeEntry[]> {
-  const res = await fetch(`${API_URL}/time-entries`);
+  const res = await fetch(`${API_URL}/time-entries`, { headers: getHeaders() });
   return res.json();
 }
 
-export async function createTimeEntry(input: Omit<TimeEntry, "id">): Promise<{ id: number }> {
+export async function createTimeEntry(input: Omit<TimeEntry, "id" | "consultant_id">): Promise<{ id: number }> {
   const res = await fetch(`${API_URL}/time-entries`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: getHeaders(),
     body: JSON.stringify(input),
   });
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.error || "Error al crear entrada");
+  }
   return res.json();
 }
 
 export async function deleteTimeEntry(id: number): Promise<void> {
-  await fetch(`${API_URL}/time-entries/${id}`, { method: "DELETE" });
+  const res = await fetch(`${API_URL}/time-entries/${id}`, {
+    method: "DELETE",
+    headers: getHeaders(),
+  });
+  if (!res.ok) throw new Error("No tienes autorización para eliminar este registro");
 }
 
-// TODO (parte del ejercicio): implementar aquí una función searchTimeEntries(q)
-// que llame a GET /api/time-entries/search?q=... y se use desde un buscador en la UI.
+export async function searchTimeEntries(q: string): Promise<TimeEntry[]> {
+  const res = await fetch(`${API_URL}/time-entries/search?q=${encodeURIComponent(q)}`, {
+    headers: getHeaders(),
+  });
+  return res.json();
+}
 
-// TODO (parte del ejercicio): implementar aquí una función getSummary(clientId, month)
-// que llame a GET /api/summary?client_id=...&month=... y se use en una pantalla de
-// "resumen mensual facturable por cliente". Antes de confiar en el número que
-// devuelve, revisa si es consistente con los datos de prueba.
+export async function getSummary(clientId: number, month: string): Promise<SummaryResponse> {
+  const res = await fetch(`${API_URL}/time-entries/summary?client_id=${clientId}&month=${month}`, {
+    headers: getHeaders(),
+  });
+  return res.json();
+}

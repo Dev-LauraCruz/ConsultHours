@@ -1,5 +1,3 @@
 node_modules/
-consulthours.db
 .env
-dist/
-.DS_Store
+consulthours.db

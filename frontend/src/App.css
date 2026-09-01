@@ -1,17 +1,272 @@
+:root {
+  --ink: #1b222c;
+  --ink-soft: #5a6472;
+  --paper: #f1efe9;
+  --panel: #fffdf9;
+  --line: #ddd7c8;
+  --navy: #1f3a5f;
+  --navy-dark: #16283f;
+  --gold: #9c6b1f;
+  --gold-soft: #f4e9d4;
+  --rust: #a23e2e;
+  --rust-soft: #f6e4e0;
+  --radius: 6px;
+}
+
 * { box-sizing: border-box; }
-body { margin: 0; }
-.app { max-width: 880px; margin: 0 auto; padding: 24px; font-family: system-ui, sans-serif; color: #1f2937; }
-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-h1 { font-size: 22px; }
-.user-pill { background: #e5e7eb; padding: 4px 10px; border-radius: 999px; font-size: 13px; }
-.user-pill.muted { color: #6b7280; }
-.login-form, .new-entry { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
-.login-form input { display: block; width: 100%; margin-bottom: 8px; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; }
-.new-entry form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.new-entry input, .new-entry select { padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; }
-.checkbox { display: flex; align-items: center; gap: 4px; font-size: 14px; }
-button { background: #1f4e79; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; }
-.error { color: #c0392b; font-size: 13px; }
-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-th, td { text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb; }
-th { color: #6b7280; font-weight: 600; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 24px 64px;
+  font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--ink);
+}
+
+h1 {
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+h2 {
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 14px;
+  color: var(--ink);
+}
+
+h3 {
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 14px;
+  color: var(--ink);
+}
+
+.user-pill {
+  background: var(--navy);
+  color: var(--panel);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.user-pill.muted {
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+}
+
+/* Tarjetas de sección — mismo tratamiento para login, búsqueda, resumen y alta */
+.login-form,
+.new-entry,
+.search-bar,
+.summary,
+.entry-list {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.search-bar form {
+  display: flex;
+  gap: 10px;
+}
+
+.search-bar input {
+  flex: 1;
+}
+
+.login-form {
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.login-form input,
+.new-entry input,
+.new-entry select,
+.search-bar input,
+.summary input,
+.summary select {
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.login-form input {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.login-form input:focus,
+.new-entry input:focus,
+.new-entry select:focus,
+.search-bar input:focus,
+.summary input:focus,
+.summary select:focus {
+  outline: 2px solid var(--navy);
+  outline-offset: 1px;
+  background: var(--panel);
+}
+
+.new-entry form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+/* Botones — jerarquía por función, no todos iguales */
+button {
+  background: var(--navy);
+  color: var(--panel);
+  border: none;
+  padding: 9px 16px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--navy-dark);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* El botón Eliminar siempre está en la última columna de la tabla —
+   se distingue como acción destructiva sin necesitar tocar el JSX. */
+.entry-list td:last-child button {
+  background: transparent;
+  color: var(--rust);
+  border: 1px solid var(--rust);
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.entry-list td:last-child button:hover {
+  background: var(--rust-soft);
+}
+
+.error {
+  color: var(--rust);
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+.hint {
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-style: italic;
+  margin: 6px 0 0;
+}
+
+/* Tabla */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+th, td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+th {
+  color: var(--ink-soft);
+  font-weight: 600;
+  font-size: 12.5px;
+  border-bottom: 2px solid var(--ink);
+}
+
+tbody tr:hover {
+  background: var(--paper);
+}
+
+/* Facturable "Sí" resaltado en dorado — es el dato que más importa
+   para el propósito del cliente (facturación), así que se distingue
+   estructuralmente, no solo decorativamente. */
+tbody tr td:nth-child(5) {
+  font-weight: 600;
+}
+
+.summary-result {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--gold-soft);
+  border-radius: var(--radius);
+  border: 1px solid var(--gold);
+}
+
+.summary-result p {
+  margin: 0 0 4px;
+  color: var(--ink);
+}
+
+.summary-result strong {
+  color: var(--gold);
+  font-size: 16px;
+}
+
+@media (max-width: 640px) {
+  .app { padding: 24px 16px 48px; }
+  header { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .new-entry form { flex-direction: column; align-items: stretch; }
+  table, thead, tbody, th, td, tr { display: block; }
+  thead { display: none; }
+  tbody tr {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    padding: 8px;
+  }
+  td { border-bottom: none; padding: 4px 8px; }
+  td:before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--ink-soft);
+    display: inline-block;
+    width: 90px;
+    font-size: 12px;
+  }
+}
