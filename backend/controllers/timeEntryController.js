@@ -19,18 +19,7 @@ exports.searchTimeEntries = (req, res) => {
 
 exports.createTimeEntry = (req, res) => {
   const { client_id, date, start_time, end_time, billable, description } = req.body;
-  const consultant_id = req.user.id; // Del JWT, nunca del body — evita que un consultor cree registros a nombre de otro.
-
-  // CORREGIDO: la versión anterior tenía dos condiciones OR con parámetros
-  // repetidos; la segunda era redundante. Una sola condición basta para
-  // detectar cualquier traslape entre [start_time, end_time) del nuevo
-  // registro y [start_time, end_time) de uno existente el mismo día:
-  //   existente.start < nuevo.end  AND  existente.end > nuevo.start
-  //
-  // DECISIÓN DE NEGOCIO (documentar en NOTES.md): se RECHAZA el traslape
-  // con 400, en vez de solo advertir, porque dos registros facturables
-  // traslapados para el mismo consultor duplicarían horas cobradas al
-  // cliente (ver el caso real del 6 de agosto en seed.js).
+  const consultant_id = req.user.id; 
   const overlap = db.prepare(`
     SELECT * FROM time_entries
     WHERE consultant_id = ? AND date = ?
@@ -50,11 +39,7 @@ exports.createTimeEntry = (req, res) => {
 };
 
 exports.deleteTimeEntry = (req, res) => {
-  // CORREGIDO: antes la ruta restringía este endpoint a requireRole("admin"),
-  // así que ningún consultor podía borrar ni sus propios registros. El
-  // requisito pide dos niveles: dueño O admin. Esa lógica se movió aquí,
-  // al controller, porque depende del dato (¿de quién es el registro?),
-  // no solo del rol del usuario.
+
   const entry = db.prepare("SELECT * FROM time_entries WHERE id = ?").get(req.params.id);
 
   if (!entry) {
@@ -82,7 +67,6 @@ exports.getSummary = (req, res) => {
     targetConsultantId = req.user.id;
   }
 
-  // CORREGIDO: Se quita "AND billable = 1" del WHERE para traer todos los registros del mes
   let query = `SELECT * FROM time_entries WHERE client_id = ? AND date LIKE ?`;
   const params = [client_id, `${month}%`];
 
@@ -95,7 +79,6 @@ exports.getSummary = (req, res) => {
 
   let totalHours = 0;
   rows.forEach((r) => {
-    // Solo sumamos el tiempo si el registro es facturable (billable === 1)
     if (r.billable === 1) {
       const [sh, sm] = r.start_time.split(":").map(Number);
       const [eh, em] = r.end_time.split(":").map(Number);
@@ -107,6 +90,6 @@ exports.getSummary = (req, res) => {
     client_id: Number(client_id),
     month,
     billableHours: Math.round(totalHours * 100) / 100,
-    entryCount: rows.length, // Ahora sí reflejará el total real de registros (6)
+    entryCount: rows.length,
   });
 };
