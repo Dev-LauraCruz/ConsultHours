@@ -34,8 +34,6 @@ function App() {
   const loadData = async () => {
     try {
       const [entriesData, clientsData] = await Promise.all([getTimeEntries(), getClients()]);
-      
-      // SOLUCIÓN AL ERROR: Validar que la API devuelva un Array real antes de asignar al state
       setEntries(Array.isArray(entriesData) ? entriesData : []);
       setClients(Array.isArray(clientsData) ? clientsData : []);
     } catch (err) {
@@ -148,8 +146,8 @@ function App() {
 
   return (
     <div className="app">
-      <header>
-        <h1>ConsultHours</h1>
+      <header className="header-container">
+        <h1 className="main-title">ConsultHours</h1>
         {user ? (
           <div className="user-menu">
             <button
@@ -171,110 +169,136 @@ function App() {
       </header>
 
       {!user ? (
-        <form className="login-form" onSubmit={handleLogin}>
-          <h2>Iniciar sesión</h2>
-          <input placeholder="usuario" value={username} onChange={(e) => setUsername(e.target.value)} />
-          <input placeholder="contraseña" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          <button type="submit">Entrar</button>
-          {loginError && <p className="error">{loginError}</p>}
-        </form>
+        <div className="login-wrapper">
+          <form className="login-form" onSubmit={handleLogin}>
+            <h2>Iniciar sesión</h2>
+            <input 
+              placeholder="usuario" 
+              value={username} 
+              onChange={(e) => setUsername(e.target.value)} 
+            />
+            <input 
+              placeholder="contraseña" 
+              type="password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+            />
+            <button type="submit">Entrar</button>
+            {loginError && <p className="error">{loginError}</p>}
+          </form>
+        </div>
       ) : (
-        <>
-          <section className="search-bar">
-            <form onSubmit={handleSearch}>
-              <input 
-                placeholder="Buscar por descripción..." 
-                value={searchQuery} 
-                onChange={(e) => setSearchQuery(e.target.value)} 
-              />
-              <button type="submit">Buscar</button>
-              {searchQuery && (
-                <button type="button" onClick={handleClearSearch}>Limpiar</button>
-              )}
-            </form>
-          </section>
+        <div className="dashboard-grid">
+          {/* Columna Izquierda: Formularios y Controles */}
+          <aside className="sidebar">
+            <section className="card">
+              <h2>Registrar horas</h2>
+              <form onSubmit={handleCreate} className="vertical-form">
+                <select value={form.client_id} onChange={(e) => setForm({ ...form, client_id: e.target.value })}>
+                  <option value="">Cliente…</option>
+                  {Array.isArray(clients) && clients.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+                <div className="time-inputs">
+                  <input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} />
+                  <input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} />
+                </div>
+                <label className="checkbox">
+                  <input type="checkbox" checked={form.billable} onChange={(e) => setForm({ ...form, billable: e.target.checked })} />
+                  Facturable
+                </label>
+                <input placeholder="Descripción" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+                <button type="submit">Agregar</button>
+              </form>
+            </section>
 
-          <section className="summary">
-            <h3>Resumen Mensual Facturable</h3>
-            <form onSubmit={handleFetchSummary}>
-              <select value={summaryClientId} onChange={(e) => setSummaryClientId(e.target.value)}>
-                <option value="">Seleccionar cliente...</option>
-                {Array.isArray(clients) && clients.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-              <input type="month" value={summaryMonth} onChange={(e) => setSummaryMonth(e.target.value)} />
-              <button type="submit">Calcular</button>
-              {(summaryClientId || summaryMonth || summaryData) && (
-                <button type="button" onClick={handleClearSummary}>Limpiar</button>
+            <section className="card">
+              <h3>Buscar Registros</h3>
+              <form onSubmit={handleSearch} className="search-form">
+                <input 
+                  placeholder="Buscar por descripción..." 
+                  value={searchQuery} 
+                  onChange={(e) => setSearchQuery(e.target.value)} 
+                />
+                <div className="button-group">
+                  <button type="submit">Buscar</button>
+                  {searchQuery && (
+                    <button type="button" className="btn-secondary" onClick={handleClearSearch}>Limpiar</button>
+                  )}
+                </div>
+              </form>
+            </section>
+
+            <section className="card">
+              <h3>Resumen Mensual Facturable</h3>
+              <form onSubmit={handleFetchSummary} className="vertical-form">
+                <select value={summaryClientId} onChange={(e) => setSummaryClientId(e.target.value)}>
+                  <option value="">Seleccionar cliente...</option>
+                  {Array.isArray(clients) && clients.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <input type="month" value={summaryMonth} onChange={(e) => setSummaryMonth(e.target.value)} />
+                <div className="button-group">
+                  <button type="submit">Calcular</button>
+                  {(summaryClientId || summaryMonth || summaryData) && (
+                    <button type="button" className="btn-secondary" onClick={handleClearSummary}>Limpiar</button>
+                  )}
+                </div>
+              </form>
+              {summaryData && (
+                <div className="summary-result">
+                  <p>Horas facturables: <strong>{summaryData.billableHours} hrs</strong></p>
+                  <p>Total de registros: <strong>{summaryData.entryCount}</strong></p>
+                  {user?.role !== "admin" && (
+                    <p className="hint">Este resumen solo incluye tus propias horas.</p>
+                  )}
+                </div>
               )}
-            </form>
-            {summaryData && (
-              <div className="summary-result">
-                <p>Horas facturables: <strong>{summaryData.billableHours} hrs</strong></p>
-                <p>Total de registros: <strong>{summaryData.entryCount}</strong></p>
-                {user?.role !== "admin" && (
-                  <p className="hint">Este resumen solo incluye tus propias horas.</p>
-                )}
+            </section>
+          </aside>
+
+          {/* Columna Derecha: Tabla Principal */}
+          <main className="main-content">
+            <section className="card table-card">
+              <h2>Registros de horas</h2>
+              <div className="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Consultor</th>
+                      <th>Cliente</th>
+                      <th>Horario</th>
+                      <th>Facturable</th>
+                      <th>Descripción</th>
+                      <th>Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Array.isArray(entries) && entries.map((e) => (
+                      <tr key={e.id}>
+                        <td>{e.date}</td>
+                        <td>{e.consultant_name}</td>
+                        <td>{e.client_name}</td>
+                        <td>{e.start_time}–{e.end_time}</td>
+                        <td>{e.billable ? "Sí" : "No"}</td>
+                        <td>{e.description}</td>
+                        <td>
+                          {(user?.role === "admin" || e.consultant_id === user?.id) && (
+                            <button className="btn-delete" onClick={() => handleDelete(e)}>Eliminar</button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
-          </section>
-
-          <section className="entry-list">
-            <h2>Registros de horas</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Fecha</th>
-                  <th>Consultor</th>
-                  <th>Cliente</th>
-                  <th>Horario</th>
-                  <th>Facturable</th>
-                  <th>Descripción</th>
-                  <th>Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Array.isArray(entries) && entries.map((e) => (
-                  <tr key={e.id}>
-                    <td>{e.date}</td>
-                    <td>{e.consultant_name}</td>
-                    <td>{e.client_name}</td>
-                    <td>{e.start_time}–{e.end_time}</td>
-                    <td>{e.billable ? "Sí" : "No"}</td>
-                    <td>{e.description}</td>
-                    <td>
-                      {(user?.role === "admin" || e.consultant_id === user?.id) && (
-                        <button onClick={() => handleDelete(e)}>Eliminar</button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-
-          <section className="new-entry">
-            <h2>Registrar horas</h2>
-            <form onSubmit={handleCreate}>
-              <select value={form.client_id} onChange={(e) => setForm({ ...form, client_id: e.target.value })}>
-                <option value="">cliente…</option>
-                {Array.isArray(clients) && clients.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-              <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
-              <input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} />
-              <input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} />
-              <label className="checkbox">
-                <input type="checkbox" checked={form.billable} onChange={(e) => setForm({ ...form, billable: e.target.checked })} />
-                Facturable
-              </label>
-              <input placeholder="descripción" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-              <button type="submit">Agregar</button>
-            </form>
-          </section>
-        </>
+            </section>
+          </main>
+        </div>
       )}
     </div>
   );

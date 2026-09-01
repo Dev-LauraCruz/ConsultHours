@@ -1,305 +1,170 @@
-:root {
-  --ink: #1b222c;
-  --ink-soft: #5a6472;
-  --paper: #f1efe9;
-  --panel: #fffdf9;
-  --line: #ddd7c8;
-  --navy: #1f3a5f;
-  --navy-dark: #16283f;
-  --gold: #9c6b1f;
-  --gold-soft: #f4e9d4;
-  --rust: #a23e2e;
-  --rust-soft: #f6e4e0;
-  --radius: 6px;
-}
-
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  background: var(--paper);
-  color: var(--ink);
-}
-
-.app {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 40px 24px 64px;
-  font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
-}
-
-header {
+/* Header y Título */
+.header-container {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 32px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid var(--ink);
+  align-items: center;
+  position: relative;
+  padding: 1rem 2rem;
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 1.5rem;
 }
 
-h1 {
-  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+.main-title {
+  color: #1e40af; /* Azul fuerte */
+  font-size: 2rem;
+  font-weight: 700;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   margin: 0;
 }
 
-h2 {
-  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 14px;
-  color: var(--ink);
-}
-
-h3 {
-  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0 0 14px;
-  color: var(--ink);
-}
-
-.user-pill {
-  background: var(--navy);
-  color: var(--panel);
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.user-pill.muted {
-  background: transparent;
-  color: var(--ink-soft);
-  border: 1px solid var(--line);
-}
-
-.user-menu {
-  position: relative;
-}
-
-.user-menu-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 8px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 6px;
-  box-shadow: 0 6px 16px rgba(27, 34, 44, 0.12);
-  z-index: 10;
-}
-
-.user-menu-dropdown button {
-  background: transparent;
-  color: var(--rust);
-  border: none;
-  padding: 8px 12px;
-  font-size: 13px;
-  font-weight: 500;
-  white-space: nowrap;
-  width: 100%;
-  text-align: left;
-}
-
-.user-menu-dropdown button:hover {
-  background: var(--rust-soft);
-}
-
-/* Tarjetas de sección — mismo tratamiento para login, búsqueda, resumen y alta */
-.login-form,
-.new-entry,
-.search-bar,
-.summary,
-.entry-list {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.search-bar form {
+/* Login Mejorado */
+.login-wrapper {
   display: flex;
-  gap: 10px;
-}
-
-.search-bar input {
-  flex: 1;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
 }
 
 .login-form {
-  max-width: 360px;
-  margin-left: auto;
-  margin-right: auto;
+  background: #ffffff;
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
 }
 
-.login-form input,
-.new-entry input,
-.new-entry select,
-.search-bar input,
-.summary input,
-.summary select {
-  padding: 9px 11px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  font-size: 14px;
-  color: var(--ink);
-  background: var(--paper);
+.login-form h2 {
+  color: #1e40af;
+  margin-top: 0;
+  text-align: center;
 }
 
 .login-form input {
-  display: block;
-  width: 100%;
-  margin-bottom: 10px;
+  padding: 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 1rem;
 }
 
-.login-form input:focus,
-.new-entry input:focus,
-.new-entry select:focus,
-.search-bar input:focus,
-.summary input:focus,
-.summary select:focus {
-  outline: 2px solid var(--navy);
-  outline-offset: 1px;
-  background: var(--panel);
-}
-
-.new-entry form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-}
-
-.checkbox {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: var(--ink-soft);
-}
-
-/* Botones — jerarquía por función, no todos iguales */
-button {
-  background: var(--navy);
-  color: var(--panel);
+.login-form button {
+  background-color: #1e40af;
+  color: white;
+  padding: 0.75rem;
   border: none;
-  padding: 9px 16px;
-  border-radius: var(--radius);
-  font-size: 14px;
-  font-weight: 500;
+  border-radius: 6px;
+  font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-button:hover {
-  background: var(--navy-dark);
+.login-form button:hover {
+  background-color: #1d4ed8;
 }
 
-button:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
+/* Layout Principal de 2 Columnas */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.5rem;
+  padding: 0 1.5rem 2rem 1.5rem;
+  align-items: start;
 }
 
-/* El botón Eliminar siempre está en la última columna de la tabla —
-   se distingue como acción destructiva sin necesitar tocar el JSX. */
-.entry-list td:last-child button {
-  background: transparent;
-  color: var(--rust);
-  border: 1px solid var(--rust);
-  padding: 6px 12px;
-  font-size: 13px;
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
 }
 
-.entry-list td:last-child button:hover {
-  background: var(--rust-soft);
+.main-content {
+  width: 100%;
 }
 
-.error {
-  color: var(--rust);
-  font-size: 13px;
-  margin-top: 6px;
+/* Tarjetas y Contenedores */
+.card {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 1.2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
 }
 
-.hint {
-  color: var(--ink-soft);
-  font-size: 13px;
-  font-style: italic;
-  margin: 6px 0 0;
+.card h2, .card h3 {
+  margin-top: 0;
+  color: #1e3a8a;
+  font-size: 1.15rem;
+  margin-bottom: 1rem;
 }
 
-/* Tabla */
+/* Formularios en Columna */
+.vertical-form, .search-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.time-inputs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.time-inputs input {
+  flex: 1;
+}
+
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Tabla Estilizada */
+.table-card {
+  padding: 1.5rem;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
-  font-variant-numeric: tabular-nums;
 }
 
 th, td {
+  padding: 0.75rem 0.5rem;
   text-align: left;
-  padding: 10px 8px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.9rem;
 }
 
 th {
-  color: var(--ink-soft);
-  font-weight: 600;
-  font-size: 12.5px;
-  border-bottom: 2px solid var(--ink);
-}
-
-tbody tr:hover {
-  background: var(--paper);
-}
-
-/* Facturable "Sí" resaltado en dorado — es el dato que más importa
-   para el propósito del cliente (facturación), así que se distingue
-   estructuralmente, no solo decorativamente. */
-tbody tr td:nth-child(5) {
+  background-color: #f8fafc;
+  color: #475569;
   font-weight: 600;
 }
 
-.summary-result {
-  margin-top: 14px;
-  padding: 14px 16px;
-  background: var(--gold-soft);
-  border-radius: var(--radius);
-  border: 1px solid var(--gold);
+.btn-delete {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.35rem 0.7rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
 }
 
-.summary-result p {
-  margin: 0 0 4px;
-  color: var(--ink);
-}
-
-.summary-result strong {
-  color: var(--gold);
-  font-size: 16px;
-}
-
-@media (max-width: 640px) {
-  .app { padding: 24px 16px 48px; }
-  header { flex-direction: column; align-items: flex-start; gap: 10px; }
-  .new-entry form { flex-direction: column; align-items: stretch; }
-  table, thead, tbody, th, td, tr { display: block; }
-  thead { display: none; }
-  tbody tr {
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    margin-bottom: 12px;
-    padding: 8px;
-  }
-  td { border-bottom: none; padding: 4px 8px; }
-  td:before {
-    content: attr(data-label);
-    font-weight: 600;
-    color: var(--ink-soft);
-    display: inline-block;
-    width: 90px;
-    font-size: 12px;
-  }
+.btn-secondary {
+  background-color: #64748b;
+  color: white;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
 }
