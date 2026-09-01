@@ -34,10 +34,14 @@ function App() {
   const loadData = async () => {
     try {
       const [entriesData, clientsData] = await Promise.all([getTimeEntries(), getClients()]);
-      setEntries(entriesData);
-      setClients(clientsData);
+      
+      // SOLUCIÓN AL ERROR: Validar que la API devuelva un Array real antes de asignar al state
+      setEntries(Array.isArray(entriesData) ? entriesData : []);
+      setClients(Array.isArray(clientsData) ? clientsData : []);
     } catch (err) {
       console.error("Error al cargar datos", err);
+      setEntries([]);
+      setClients([]);
     }
   };
 
@@ -50,7 +54,14 @@ function App() {
     setLoginError("");
     try {
       const data = await login(username, password);
-      setUser(data.user);
+      if (data && data.user) {
+        if (data.token) {
+          localStorage.setItem("token", data.token);
+        }
+        setUser(data.user);
+      } else {
+        setLoginError("Credenciales inválidas");
+      }
     } catch {
       setLoginError("Usuario o contraseña incorrectos");
     }
@@ -87,13 +98,9 @@ function App() {
     setClients([]);
     setSummaryData(null);
     setForm(emptyForm);
-    
-    // Limpiar campos de inicio de sesión
     setUsername("");
     setPassword("");
     setLoginError("");
-
-    // Limpiar busquedas y filtros
     handleClearSearch();
     handleClearSummary();
   }
@@ -114,7 +121,7 @@ function App() {
       return;
     }
     const results = await searchTimeEntries(searchQuery);
-    setEntries(results);
+    setEntries(Array.isArray(results) ? results : []);
   }
 
   function handleClearSearch() {
@@ -125,8 +132,12 @@ function App() {
   async function handleFetchSummary(e: FormEvent) {
     e.preventDefault();
     if (!summaryClientId || !summaryMonth) return;
-    const summary = await getSummary(Number(summaryClientId), summaryMonth);
-    setSummaryData(summary);
+    try {
+      const summary = await getSummary(Number(summaryClientId), summaryMonth);
+      setSummaryData(summary);
+    } catch (err) {
+      console.error("Error al obtener el resumen", err);
+    }
   }
 
   function handleClearSummary() {
@@ -188,7 +199,7 @@ function App() {
             <form onSubmit={handleFetchSummary}>
               <select value={summaryClientId} onChange={(e) => setSummaryClientId(e.target.value)}>
                 <option value="">Seleccionar cliente...</option>
-                {clients.map((c) => (
+                {Array.isArray(clients) && clients.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
@@ -202,7 +213,7 @@ function App() {
               <div className="summary-result">
                 <p>Horas facturables: <strong>{summaryData.billableHours} hrs</strong></p>
                 <p>Total de registros: <strong>{summaryData.entryCount}</strong></p>
-                {user.role !== "admin" && (
+                {user?.role !== "admin" && (
                   <p className="hint">Este resumen solo incluye tus propias horas.</p>
                 )}
               </div>
@@ -224,7 +235,7 @@ function App() {
                 </tr>
               </thead>
               <tbody>
-                {entries.map((e) => (
+                {Array.isArray(entries) && entries.map((e) => (
                   <tr key={e.id}>
                     <td>{e.date}</td>
                     <td>{e.consultant_name}</td>
@@ -233,7 +244,7 @@ function App() {
                     <td>{e.billable ? "Sí" : "No"}</td>
                     <td>{e.description}</td>
                     <td>
-                      {(user.role === "admin" || e.consultant_id === user.id) && (
+                      {(user?.role === "admin" || e.consultant_id === user?.id) && (
                         <button onClick={() => handleDelete(e)}>Eliminar</button>
                       )}
                     </td>
@@ -248,7 +259,7 @@ function App() {
             <form onSubmit={handleCreate}>
               <select value={form.client_id} onChange={(e) => setForm({ ...form, client_id: e.target.value })}>
                 <option value="">cliente…</option>
-                {clients.map((c) => (
+                {Array.isArray(clients) && clients.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
