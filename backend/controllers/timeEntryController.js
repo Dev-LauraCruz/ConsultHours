@@ -75,12 +75,6 @@ exports.deleteTimeEntry = (req, res) => {
 exports.getSummary = (req, res) => {
   const { client_id, month, consultant_id } = req.query;
 
-  // DECISIÓN DE NEGOCIO (documentar y justificar en NOTES.md, se puede
-  // cambiar): un consultor solo puede ver el resumen facturable de SUS
-  // propias horas para un cliente; el admin puede ver el de cualquier
-  // consultor, o el agregado de todos si no manda consultant_id.
-  // Antes esto no estaba decidido: cualquier usuario autenticado veía el
-  // agregado de todos los consultores sin restricción.
   let targetConsultantId = null;
   if (req.user.role === "admin") {
     if (consultant_id) targetConsultantId = consultant_id;
@@ -88,7 +82,8 @@ exports.getSummary = (req, res) => {
     targetConsultantId = req.user.id;
   }
 
-  let query = `SELECT * FROM time_entries WHERE client_id = ? AND date LIKE ? AND billable = 1`;
+  // CORREGIDO: Se quita "AND billable = 1" del WHERE para traer todos los registros del mes
+  let query = `SELECT * FROM time_entries WHERE client_id = ? AND date LIKE ?`;
   const params = [client_id, `${month}%`];
 
   if (targetConsultantId) {
@@ -100,15 +95,18 @@ exports.getSummary = (req, res) => {
 
   let totalHours = 0;
   rows.forEach((r) => {
-    const [sh, sm] = r.start_time.split(":").map(Number);
-    const [eh, em] = r.end_time.split(":").map(Number);
-    totalHours += (eh * 60 + em - (sh * 60 + sm)) / 60;
+    // Solo sumamos el tiempo si el registro es facturable (billable === 1)
+    if (r.billable === 1) {
+      const [sh, sm] = r.start_time.split(":").map(Number);
+      const [eh, em] = r.end_time.split(":").map(Number);
+      totalHours += (eh * 60 + em - (sh * 60 + sm)) / 60;
+    }
   });
 
   res.json({
     client_id: Number(client_id),
     month,
     billableHours: Math.round(totalHours * 100) / 100,
-    entryCount: rows.length,
+    entryCount: rows.length, // Ahora sí reflejará el total real de registros (6)
   });
 };

@@ -20,14 +20,16 @@ function App() {
   const [summaryMonth, setSummaryMonth] = useState("");
   const [summaryData, setSummaryData] = useState<SummaryResponse | null>(null);
 
-  const [form, setForm] = useState({
+  const emptyForm = {
     client_id: "",
     date: "",
     start_time: "",
     end_time: "",
     billable: true,
     description: "",
-  });
+  };
+  const [form, setForm] = useState(emptyForm);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const loadData = async () => {
     try {
@@ -69,11 +71,31 @@ function App() {
         billable: form.billable ? 1 : 0,
         description: form.description,
       });
-      setForm({ client_id: "", date: "", start_time: "", end_time: "", billable: true, description: "" });
+      setForm(emptyForm);
       loadData();
     } catch (err: any) {
       alert(err.message);
+      setForm(emptyForm);
     }
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("token");
+    setUser(null);
+    setShowUserMenu(false);
+    setEntries([]);
+    setClients([]);
+    setSummaryData(null);
+    setForm(emptyForm);
+    
+    // Limpiar campos de inicio de sesión
+    setUsername("");
+    setPassword("");
+    setLoginError("");
+
+    // Limpiar busquedas y filtros
+    handleClearSearch();
+    handleClearSummary();
   }
 
   async function handleDelete(entry: TimeEntry) {
@@ -95,6 +117,11 @@ function App() {
     setEntries(results);
   }
 
+  function handleClearSearch() {
+    setSearchQuery("");
+    if (user) loadData();
+  }
+
   async function handleFetchSummary(e: FormEvent) {
     e.preventDefault();
     if (!summaryClientId || !summaryMonth) return;
@@ -102,12 +129,31 @@ function App() {
     setSummaryData(summary);
   }
 
+  function handleClearSummary() {
+    setSummaryClientId("");
+    setSummaryMonth("");
+    setSummaryData(null);
+  }
+
   return (
     <div className="app">
       <header>
         <h1>ConsultHours</h1>
         {user ? (
-          <span className="user-pill">{user.name} · {user.role}</span>
+          <div className="user-menu">
+            <button
+              type="button"
+              className="user-pill"
+              onClick={() => setShowUserMenu((v) => !v)}
+            >
+              {user.name} · {user.role}
+            </button>
+            {showUserMenu && (
+              <div className="user-menu-dropdown">
+                <button type="button" onClick={handleLogout}>Cerrar sesión</button>
+              </div>
+            )}
+          </div>
         ) : (
           <span className="user-pill muted">sin sesión</span>
         )}
@@ -131,6 +177,9 @@ function App() {
                 onChange={(e) => setSearchQuery(e.target.value)} 
               />
               <button type="submit">Buscar</button>
+              {searchQuery && (
+                <button type="button" onClick={handleClearSearch}>Limpiar</button>
+              )}
             </form>
           </section>
 
@@ -145,6 +194,9 @@ function App() {
               </select>
               <input type="month" value={summaryMonth} onChange={(e) => setSummaryMonth(e.target.value)} />
               <button type="submit">Calcular</button>
+              {(summaryClientId || summaryMonth || summaryData) && (
+                <button type="button" onClick={handleClearSummary}>Limpiar</button>
+              )}
             </form>
             {summaryData && (
               <div className="summary-result">
@@ -181,9 +233,6 @@ function App() {
                     <td>{e.billable ? "Sí" : "No"}</td>
                     <td>{e.description}</td>
                     <td>
-                      {/* CORREGIDO: antes solo el admin veía el botón de eliminar.
-                          Ahora también aparece si el registro es del propio consultor,
-                          consistente con la autorización dueño-o-admin del backend. */}
                       {(user.role === "admin" || e.consultant_id === user.id) && (
                         <button onClick={() => handleDelete(e)}>Eliminar</button>
                       )}
