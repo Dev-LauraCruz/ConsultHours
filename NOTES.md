@@ -20,20 +20,33 @@ Mi lógica de validación previene el registro de nuevos eventos con traslape, p
 Decidí documentar este comportamiento en lugar de modificar o eliminar los datos de prueba, ya que no se trata de una falla en la implementación, sino de una condición de datos iniciales provista por el propio ejercicio.
 
 
+## Frontend
+
+api.ts no mandaba el token de sesión a ningún endpoint. Ninguna función (getClients, getTimeEntries, createTimeEntry, deleteTimeEntry) enviaba el header Authorization, y login ni siquiera guardaba el token que regresaba el backend. Aunque el backend exigiera sesión, el frontend original nunca la habría podido usar. Agregué un getHeaders() que toma el token de localStorage y lo manda en cada request protegido, y login ahora lo guarda con localStorage.setItem.
+
+consultant_id venía hardcodeado a 1 en el formulario de alta, con un comentario TODO explícito en App.tsx diciendo que debía tomarse de la sesión iniciada. Es el mismo hueco de autorización del backend pero visto desde el frontend: con el backend original (sin validar sesión), cualquiera podía crear un registro a nombre de otro consultor con solo cambiar ese número. Ahora createTimeEntry ya no manda consultant_id en absoluto — el backend lo toma del JWT.
+
+handleDelete no tenía ninguna restricción, con un TODO que decía literalmente "esta acción no debería estar disponible para cualquiera. Revisa qué pasa del lado del backend" — consistente con que el backend tampoco la tenía en ese momento.
+
+createTimeEntry y deleteTimeEntry no revisaban si la respuesta era exitosa — hacían return res.json() sin importar el status code, así que un traslape rechazado (400) o una eliminación sin permiso (403) no se le mostraban al usuario de ninguna forma; el formulario simplemente no hacía nada visible. Ahora ambas funciones lanzan un error cuando la respuesta no es exitosa, y el frontend lo captura con alert().
+
+Búsqueda y resumen no existían en api.ts ni en App.tsx, solo comentarios TODO marcando dónde debían ir. Los implementé conectándolos a GET /api/time-entries/search y GET /api/time-entries/summary.
+
 ## Decisiones de negocio (punto 5)
 
-**Traslape de horarios (mismo consultor, mismo día):** decidí **rechazarlo** con un 400 en vez de solo advertir. Si dos registros facturables de un mismo consultor se cruzan en horario, se estaría cobrando al cliente por horas que en la práctica no pudo trabajar dos veces al mismo tiempo — prefiero que el sistema no permita crear ese dato desde el inicio, en vez de confiar en que alguien lo revise después a mano.
+Traslape de horarios (mismo consultor, mismo día): decidí rechazarlo con un 400 en vez de solo advertir. Si dos registros facturables de un mismo consultor se cruzan en horario, se estaría cobrando al cliente por horas que en la práctica no pudo trabajar dos veces al mismo tiempo — prefiero que el sistema no permita crear ese dato desde el inicio, en vez de confiar en que alguien lo revise después a mano.
 
-**Visibilidad del resumen facturable entre consultores:** decidí que **un consultor solo vea su propio resumen** por cliente/mes, y que el **admin pueda ver el de cualquiera** (o el agregado de todos si no filtra por consultor). La razón: el resumen no es solo "horas trabajadas", es directamente lo que se le cobra al cliente — y eso empieza a parecerse a información de desempeño/productividad de cada consultor frente a sus compañeros, que no me parece que deba ser visible entre pares sin que sea su rol gestionar eso. Si el objetivo fuera solo coordinación de equipo (¿cuánto llevamos facturado a este cliente en total?) la otra opción también sería defendible, pero preferí el lado más conservador.
+Visibilidad del resumen facturable entre consultores: decidí que un consultor solo vea su propio resumen por cliente/mes, y que el admin pueda ver el de cualquiera (o el agregado de todos si no filtra por consultor). La razón: el resumen no es solo "horas trabajadas", es directamente lo que se le cobra al cliente — y eso empieza a parecerse a información de desempeño/productividad de cada consultor frente a sus compañeros, que no me parece que deba ser visible entre pares sin que sea su rol gestionar eso. Si el objetivo fuera solo coordinación de equipo (¿cuánto llevamos facturado a este cliente en total?) la otra opción también sería defendible, pero preferí el lado más conservador.
 
 ## Sobre el uso de IA
 
 Usé Claude como apoyo durante todo el proceso, principalmente para: revisar el código en busca de vulnerabilidades y bugs, explicarme por qué fallaban cosas que no entendía a la primera, y para escribir/ajustar el CSS.
 
 Cosas que tuve que corregir o pedir de nuevo porque la primera propuesta no estaba completa:
-- El formulario de "Registrar horas" fallaba en silencio cuando faltaba seleccionar un cliente — no era obvio hasta que probé y no pasaba nada. Tuve que pedir que agregara una alerta visible en ese caso.
-- Al cerrar sesión, el formulario de login se quedaba con el usuario/contraseña anteriores y la búsqueda/resumen no se limpiaban — lo noté probando manualmente y pedí que se corrigiera.
-- El botón "Eliminar" no tenía ninguna distinción visual de las demás acciones (mismo azul que "Agregar" o "Calcular"), lo cual no ayuda a evitar borrados por error — pedí que se le diera un tratamiento distinto.
-- No agregó por su cuenta un botón para cerrar sesión ni para limpiar los filtros de búsqueda/resumen; tuve que pedirlo explícitamente después de notar que no estaban.
 
-En general, la IA fue útil para no dejar pasar el hueco de autorización en el delete y para detectar el filtro `billable` faltante en el resumen, pero varias de las decisiones de UX y varios bugs de comportamiento (formulario silencioso, falta de limpieza de estado) los detecté yo probando la app, no porque la IA los hubiera anticipado.
+El formulario de "Registrar horas" fallaba en silencio cuando faltaba seleccionar un cliente — ese return sin ningún mensaje ya venía así desde el código oficial del ejercicio, y no era obvio hasta que probé y no pasaba nada. Tuve que pedir que agregara una alerta visible en ese caso.
+Al cerrar sesión, el formulario de login se quedaba con el usuario/contraseña anteriores y la búsqueda/resumen no se limpiaban — lo noté probando manualmente y pedí que se corrigiera.
+El botón "Eliminar" no tenía ninguna distinción visual de las demás acciones (mismo azul que "Agregar" o "Calcular"), lo cual no ayuda a evitar borrados por error — pedí que se le diera un tratamiento distinto.
+No agregó por su cuenta un botón para cerrar sesión ni para limpiar los filtros de búsqueda/resumen; tuve que pedirlo explícitamente después de notar que no estaban.
+
+En general, la IA fue útil para no dejar pasar el hueco de autorización en el delete y para detectar el filtro billable faltante en el resumen, pero varias de las decisiones de UX y varios bugs de comportamiento (formulario silencioso, falta de limpieza de estado) los detecté yo probando la app a mano, no porque la IA los hubiera anticipado.
