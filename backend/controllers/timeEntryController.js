@@ -1,21 +1,39 @@
 const db = require("../config/db");
 
 exports.getTimeEntries = (req, res) => {
-  const rows = db.prepare(`
+  let query = `
     SELECT te.*, c.name AS client_name, co.name AS consultant_name
     FROM time_entries te
     JOIN clients c ON c.id = te.client_id
     JOIN consultants co ON co.id = te.consultant_id
-    ORDER BY te.date DESC, te.start_time ASC
-  `).all();
+  `;
+  const params = [];
+
+  if (req.user.role !== "admin") {
+    query += ` WHERE te.consultant_id = ?`;
+    params.push(req.user.id);
+  }
+
+  query += ` ORDER BY te.date DESC, te.start_time ASC`;
+
+  const rows = db.prepare(query).all(...params);
   res.json(rows);
 };
 
 exports.searchTimeEntries = (req, res) => {
   const q = req.query.q || "";
-  const rows = db.prepare("SELECT * FROM time_entries WHERE description LIKE ?").all(`%${q}%`);
+  let query = "SELECT * FROM time_entries WHERE description LIKE ?";
+  const params = [`%${q}%`];
+
+  if (req.user.role !== "admin") {
+    query += " AND consultant_id = ?";
+    params.push(req.user.id);
+  }
+
+  const rows = db.prepare(query).all(...params);
   res.json(rows);
 };
+
 
 exports.createTimeEntry = (req, res) => {
   const { client_id, date, start_time, end_time, billable, description } = req.body;
